@@ -10,11 +10,15 @@ import (
 	"net/http"
 	ttl_map "github.com/leprosus/golang-ttl-map"
 	"encoding/json"
+	"strings"
+	geoip2 "github.com/oschwald/geoip2-golang"
 )
 
 var (
 	Verbose bool
 	cache ttl_map.Heap
+	dbASN *geoip2.Reader
+	dbCity *geoip2.Reader
 )
 
 type Handle struct {
@@ -51,6 +55,12 @@ type ResDomain struct {
 	Origin string
 }
 
+type Response struct {
+	ISP string
+	Country string
+	IP string
+}
+
 func doc(w http.ResponseWriter, r *http.Request) {
 	var d Domains
         w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -70,11 +80,47 @@ func doc(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Printf("In=%+v\n", d)
 
-	out := make(map[string]string)
+	// Filter out duplicate IPs
+	uniqips := make(map[string]int)
 	for _, domain := range d.Domain {
-		val := cache.Get(domain)
-		out[domain] = val
+		vals := cache.Get(domain)
+                for _, ip := range strings.Split(vals, ",") {
+			n, _ := uniqips[ip]
+			uniqips[ip] = n + 1
+		}
 	}
+
+	out := make(map[uint]Response)
+	// Humanize
+	for ipstr, _ := range uniqips {
+	if len(ipstr) == 0 {
+	break;
+	}
+	  // Convert IPs to company list
+	  ip := net.ParseIP(ipstr)
+          country, e := dbCity.Country(ip)
+          if e != nil {
+		log.Printf(e.Error())
+                http.Error(w, "failed parsing IPs", 400)
+                return
+           }
+
+	isp, e := dbASN.ASN(ip);
+	   if e != nil {
+                log.Printf(e.Error())
+                http.Error(w, "failed parsing IPs", 400)
+                return
+           }
+
+	  if _, ok := out[isp.AutonomousSystemNumber]; !ok {
+		out[isp.AutonomousSystemNumber] = Response{
+ISP: isp.AutonomousSystemOrganization,
+Country: country.Country.IsoCode,
+IP: ipstr,
+		}
+	}
+
+        }
 
 	buf := new(bytes.Buffer)
 	if e := json.NewEncoder(buf).Encode(out); e != nil {
@@ -100,6 +146,19 @@ func main() {
 
 	handler := &Handle{}
 	cache = ttl_map.New("/tmp/leak.tsv")
+
+	var err error
+    dbCity, err = geoip2.Open("city.mmdb")
+    if err != nil {
+            log.Fatal(err)
+    }
+    defer dbCity.Close()
+
+    dbASN, err = geoip2.Open("asn.mmdb")
+    if err != nil {
+            log.Fatal(err)
+    }
+    defer dbASN.Close()
 
 	go func() {
 		if err := dns.ListenAndServe(dns_addr, "udp", handler); err != nil {
