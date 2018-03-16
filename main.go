@@ -12,6 +12,8 @@ import (
 	"net"
 	"net/http"
 	"strings"
+	"golang.org/x/crypto/acme/autocert"
+	"crypto/tls"
 )
 
 var (
@@ -171,8 +173,23 @@ func main() {
 		}
 	}()
 
-	http.HandleFunc("/", doc)
-	if e := http.ListenAndServe(http_addr, nil); e != nil {
-		panic(e)
-	}
+	
+    m := &autocert.Manager{
+        Cache:      autocert.DirCache("certs"),
+        Prompt:     autocert.AcceptTOS,
+        HostPolicy: autocert.HostWhitelist("ns-dnstest.spyoff.com"),
+    }
+    go http.ListenAndServe(":http", m.HTTPHandler(nil))
+
+    mux := http.NewServeMux()
+    mux.HandleFunc("/dns/leaktest", doc)
+
+    s := &http.Server{
+        Addr:      ":https",
+        TLSConfig: &tls.Config{GetCertificate: m.GetCertificate},
+        Handler:   mux,
+    }
+    log.Fatal(s.ListenAndServeTLS("", ""))
+
+//	http.HandleFunc("/dns/leaktest", doc)
 }
