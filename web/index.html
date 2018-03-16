@@ -49,7 +49,7 @@ function randomString(length, chars) {
           setTimeout(function() {
               $.ajax({
                   type: "POST",
-                  url: "http://ns-dnstest.spyoff.com/",
+                  url: "https://ns-dnstest.spyoff.com/dns/leaktest",
                   data: JSON.stringify({domain: urls}),
                   contentType: "application/json",
                   dataType: 'json',
