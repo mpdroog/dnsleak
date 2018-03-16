@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>DNSleak testing</title>
+    <link href="https://v4-alpha.getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
+  </head>
+  <body>
+
+    <div class="container">
+
+      <div style="padding: 20px">
+        <h1>DNSleak testing</h1>
+        <a href="#" class="js-leak-start">Leak test</a>
+      </div>
+
+    </div><!-- /.container -->
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script>
+var CALLS = 5;
+var URL = ".dnstest.spyoff.com";
+
+function randomString(length, chars) {
+    var mask = '';
+    if (chars.indexOf('a') > -1) mask += 'abcdefghijklmnopqrstuvwxyz';
+    if (chars.indexOf('A') > -1) mask += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    if (chars.indexOf('#') > -1) mask += '0123456789';
+    if (chars.indexOf('!') > -1) mask += '~`!@#$%^&*()_+-={}[]:";\'<>?,./|\\';
+    var result = '';
+    for (var i = length; i > 0; --i) result += mask[Math.floor(Math.random() * mask.length)];
+    return result;
+}
+
+      $(".js-leak-start").click(function() {
+          // 5 random addresses
+          var urls = [];
+          for (var i = 0; i < CALLS; i++) {
+              urls.push(randomString(16, 'a#') + URL);
+          }
+          console.log("Lookup IPs", urls);
+
+          for (var i = 0; i < CALLS; i++) {
+              $.ajax({type: "GET", url: "http://" + urls[i], timeout: 3000});
+          }
+          setTimeout(function() {
+              $.ajax({
+                  type: "POST",
+                  url: "http://ns-dnstest.spyoff.com/",
+                  data: JSON.stringify({domain: urls}),
+                  contentType: "application/json",
+                  dataType: 'json',
+                  success: function (data) { 
+                      console.log("res", data);
+                  },
+                  error: function(){
+                      console.log("Error");
+                  },
+                  timeout: 3000 // sets timeout to 3 seconds
+              });
+          }, 6000);
+      });
+    </script>
+  </body>
+</html>

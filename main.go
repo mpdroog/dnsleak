@@ -38,7 +38,9 @@ func (h *Handle) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
 		fmt.Printf("Origin=%s\n", ip)
 		fmt.Printf("Domain=%s\n", domain);
 	}
-	cache.Set(domain, ip, 300) // 5min
+        ips := cache.Get(domain)
+        ips += "," + ip
+	cache.Set(domain, ips, 300) // 5min
 }
 
 type Domains struct {
@@ -51,6 +53,16 @@ type ResDomain struct {
 
 func doc(w http.ResponseWriter, r *http.Request) {
 	var d Domains
+        w.Header().Set("Access-Control-Allow-Origin", "*")
+    	w.Header().Set("Access-Control-Allow-Credentials", "true");
+    	w.Header().Set("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT");
+    	w.Header().Set("Access-Control-Allow-Headers", "Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers");
+
+        if (r.Method == "OPTIONS") {
+		w.Write([]byte("CORS :)"))
+		return
+        }
+
 	if e := json.NewDecoder(r.Body).Decode(&d); e != nil {
 		log.Printf(e.Error())
 		http.Error(w, "failed to decode input", 400)
