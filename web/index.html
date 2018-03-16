@@ -15,6 +15,9 @@
 
       <div style="padding: 20px">
         <h1>DNSleak testing</h1>
+	<ul class="js-steps"></ul>
+	<h2>Results</h2>
+	<blockquote class="js-results"></blockquote>
         <a href="#" class="js-leak-start">Leak test</a>
       </div>
 
@@ -34,8 +37,20 @@ function randomString(length, chars) {
     for (var i = length; i > 0; --i) result += mask[Math.floor(Math.random() * mask.length)];
     return result;
 }
+function text(msg, delay=500) {
+    if (delay > 0) {
+        window.setTimeout(function() {
+            $(".js-steps").append("<li>" + msg + "</li");
+        }, delay);
+        return;
+    }
+
+    $(".js-steps").append("<li>" + msg + "</li");
+}
 
       $(".js-leak-start").click(function() {
+	$(".js-leak-start").addClass("disabled");
+	$(".js-leak-start").attr("disabled", "disabled");
           // 5 random addresses
           var urls = [];
           for (var i = 0; i < CALLS; i++) {
@@ -43,10 +58,16 @@ function randomString(length, chars) {
           }
           console.log("Lookup IPs", urls);
 
+	var delay = 200;
           for (var i = 0; i < CALLS; i++) {
+		text("Calling " + urls[i], delay);
               $.ajax({type: "GET", url: "http://" + urls[i], timeout: 3000});
+	delay += 600;
           }
-          setTimeout(function() {
+	$(".js-results").html("");
+	var retries = 0;
+          var timer = setInterval(function() {
+		$(".js-results").html("");
               $.ajax({
                   type: "POST",
                   url: "https://ns-dnstest.spyoff.com/dns/leaktest",
@@ -54,14 +75,26 @@ function randomString(length, chars) {
                   contentType: "application/json",
                   dataType: 'json',
                   success: function (data) { 
+			for (var asn in data) {
+				//text("<img width='16' height='16' src='http://ad-panda.net/safety/flags/" + data[asn].Country.toLowerCase() + ".png'> Call from " + data[asn].IP + " by " + data[asn].ISP, 0);
+				$(".js-results").append("<p><img width='16' height='16' src='http://ad-panda.net/safety/flags/" + data[asn].Country.toLowerCase() + ".png'> Call from " + data[asn].IP + " by " + data[asn].ISP + "</p>");
+			}
                       console.log("res", data);
                   },
                   error: function(){
                       console.log("Error");
+			text("ERROR", 0);
                   },
                   timeout: 3000 // sets timeout to 3 seconds
               });
+		retries++;
+		if (retries >= 10) {
+			// done!
+			clearTimeout(timer);
+		}
           }, 6000);
+	delay += 400;
+	text("Waiting a few seconds for an accurate response..", delay);
       });
     </script>
   </body>
