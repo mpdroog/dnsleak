@@ -14,6 +14,7 @@
     <div class="container">
 
       <div style="padding: 20px">
+        <img src="spyoff.svg" width="300">
         <h1>DNSleak testing</h1>
 	<ul class="js-steps"></ul>
 	<h2>Results</h2>
@@ -21,23 +22,9 @@
         <a href="#" class="js-leak-start">Leak test</a>
       </div>
 
-      <div style="padding: 20px">
-        <h1>WebRTC leak testing</h1>
-	<blockquote class="js-webrtc"></blockquote>
-      </div>
-
     </div><!-- /.container -->
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
 
-<iframe id="iframe" sandbox="allow-same-origin allow-scripts" style="display: none"></iframe>
-    <script src="webrtc.js"></script>
-    <script>
-getIPs(function(ip){
-  console.log(ip);
-  $(".js-webrtc").append("<p>" + ip + "</p>");
-});
-
-    </script>
     <script>
 var CALLS = 5;
 var URL = ".dnstest.spyoff.com";
