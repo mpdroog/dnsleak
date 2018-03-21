@@ -4,6 +4,9 @@ Catch DNS-requests and keep in memory to offer
 the origin IP and notice if your DNS-requests pass through
 a faulty server.
 
+Tool created for SpyOFF
+https://www.spyoff.com/en/dns-leak-test
+
 Install
 ```
 useradd -r dnsleak
