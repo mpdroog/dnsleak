@@ -6,8 +6,7 @@ Catch DNS-requests and keep in memory to offer
 the origin IP and notice if your DNS-requests pass through
 a faulty server.
 
-Tool created for SpyOFF
-https://www.spyoff.com/en/dns-leak-test
+Tool created for [SpyOFF](https://www.spyoff.com/dns-leak-test/?a_aid=11108&a_bid=02dc3d81)
 
 Install
 ```
