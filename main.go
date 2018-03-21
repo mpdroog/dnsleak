@@ -14,6 +14,7 @@ import (
 	"strings"
 	"golang.org/x/crypto/acme/autocert"
 	"crypto/tls"
+	"github.com/coreos/go-systemd/daemon"
 )
 
 var (
@@ -80,7 +81,9 @@ func doc(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "failed to decode input", 400)
 		return
 	}
-	fmt.Printf("In=%+v\n", d)
+	if Verbose {
+		fmt.Printf("In=%+v\n", d)
+	}
 
 	// Filter out duplicate IPs
 	uniqips := make(map[string]int)
@@ -188,6 +191,14 @@ func main() {
         Addr:      ":https",
         TLSConfig: &tls.Config{GetCertificate: m.GetCertificate},
         Handler:   mux,
+    }
+
+    sent, e := daemon.SdNotify(false, "READY=1")
+    if e != nil {
+        log.Fatal(e)
+    }
+    if !sent {
+      log.Printf("SystemD notify NOT sent\n")
     }
     log.Fatal(s.ListenAndServeTLS("", ""))
 
