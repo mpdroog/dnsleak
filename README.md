@@ -1,3 +1,5 @@
+![SpyOFF](https://github.com/mpdroog/dnsleak/blob/master/web/spyoff.svg)
+
 DNSleak
 ==================
 Catch DNS-requests and keep in memory to offer
