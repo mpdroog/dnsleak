@@ -143,10 +143,14 @@ func main() {
 	var (
 		dns_addr  string
 		http_addr string
+		https_addr string
+		host string
 	)
 	flag.BoolVar(&Verbose, "v", false, "Verbose-mode (log more)")
 	flag.StringVar(&dns_addr, "d", "[::]:53", "DNS listen on (both tcp and udp)")
 	flag.StringVar(&http_addr, "h", "[::]:80", "HTTP listen on")
+	flag.StringVar(&https_addr, "s", "[::]:443", "HTTPS listen on")
+	flag.StringVar(&host, "m", "ns-dnstest.spyoff.com", "HTTPS-domain (LetsEncrypt)")
 	flag.Parse()
 
 	handler := &Handle{}
@@ -179,7 +183,7 @@ func main() {
 	m := &autocert.Manager{
 		Cache:      autocert.DirCache("certs"),
 		Prompt:     autocert.AcceptTOS,
-		HostPolicy: autocert.HostWhitelist("ns-dnstest.spyoff.com"),
+		HostPolicy: autocert.HostWhitelist(host),
 	}
 	go http.ListenAndServe(http_addr, m.HTTPHandler(nil))
 
@@ -187,7 +191,7 @@ func main() {
 	mux.HandleFunc("/dns/leaktest", lookup)
 
 	s := &http.Server{
-		Addr:      ":https",
+		Addr:      https_addr,
 		TLSConfig: &tls.Config{GetCertificate: m.GetCertificate},
 		Handler:   mux,
 	}
