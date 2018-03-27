@@ -35,13 +35,22 @@ Tool created for [SpyOFF](https://www.spyoff.com/dns-leak-test/?a_aid=11108&a_bi
 
 Install
 ```
+# User + systemd
 useradd -r dnsleak
 mkdir -p /home/dnsleak
 vi /etc/systemd/system/dnsleak.service
+# Systemd file below...
+
 chmod 644 /etc/systemd/system/dnsleak.service
 systemctl daemon-reload
 systemctl enable dnsleak
 systemctl start dnsleak
+
+# MaxMind GeoIP
+vi /etc/cron.d/dnsleak-geo
+# @daily dnsleak /home/dnsleak/geoip.sh
+mkdir -p /tmp/geoip
+chown dnsleak:dnsleak -R /tmp/geoip
 ```
 
 /etc/systemd/system/dnsleak.service
