@@ -64,7 +64,7 @@ type Response struct {
 	IP      string
 }
 
-func doc(w http.ResponseWriter, r *http.Request) {
+func lookup(w http.ResponseWriter, r *http.Request) {
 	var d Domains
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
@@ -182,10 +182,10 @@ func main() {
         Prompt:     autocert.AcceptTOS,
         HostPolicy: autocert.HostWhitelist("ns-dnstest.spyoff.com"),
     }
-    go http.ListenAndServe(":http", m.HTTPHandler(nil))
+    go http.ListenAndServe(http_addr, m.HTTPHandler(nil))
 
     mux := http.NewServeMux()
-    mux.HandleFunc("/dns/leaktest", doc)
+    mux.HandleFunc("/dns/leaktest", lookup)
 
     s := &http.Server{
         Addr:      ":https",
@@ -201,6 +201,4 @@ func main() {
       log.Printf("SystemD notify NOT sent\n")
     }
     log.Fatal(s.ListenAndServeTLS("", ""))
-
-//	http.HandleFunc("/dns/leaktest", doc)
 }
