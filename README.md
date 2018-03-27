@@ -13,11 +13,11 @@ How to use?
 - Point A-record to this node i.e. ns-dnstest.spyoff.com
 - Point NS-record to this node i.e. dnstest.spyoff.com
 - POST https://ns-dnstest.spyoff.com/dns/leaktest
- IN: ```{domain: ["4eb4b123bbd72478a29bff21cd00f48722b704ce.dnstest.spyoff.com"]}```
- OUT: ```{"15169":{"ISP":"Google LLC","Country":"US","IP":"172.217.40.8"}```
+ IN: `{domain: ["4eb4b123bbd72478a29bff21cd00f48722b704ce.dnstest.spyoff.com"]}`
+ OUT: `{"15169":{"ISP":"Google LLC","Country":"US","IP":"172.217.40.8"}`
 
 Arguments
-```
+```bash
 ./dnsleak --help
 Usage of ./dnsleak:
   -d string
@@ -31,10 +31,10 @@ Usage of ./dnsleak:
   -v	Verbose-mode (log more)
 ```
 
-Tool created for [SpyOFF](https://www.spyoff.com/dns-leak-test/?a_aid=11108&a_bid=02dc3d81)
+Tool created for [SpyOFF](https://spyoff.com/dns-leak-test/?a_aid=11108&a_bid=02dc3d81)
 
 Install
-```
+```bash
 # User + systemd
 useradd -r dnsleak
 mkdir -p /home/dnsleak
