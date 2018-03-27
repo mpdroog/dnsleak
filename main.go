@@ -21,7 +21,7 @@ var (
 	Verbose bool
 	cache   ttl_map.Heap
 	dbASN   *geoip2.Reader
-	dbCity  *geoip2.Reader
+	dbCountry  *geoip2.Reader
 )
 
 type Handle struct {
@@ -76,9 +76,10 @@ func lookup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	defer r.Body.Close()
 	if e := json.NewDecoder(r.Body).Decode(&d); e != nil {
 		log.Printf(e.Error())
-		http.Error(w, "failed to decode input", 400)
+		http.Error(w, "failed decoding input", 400)
 		return
 	}
 	if Verbose {
@@ -103,16 +104,16 @@ func lookup(w http.ResponseWriter, r *http.Request) {
 		}
 		// Convert IPs to company list
 		ip := net.ParseIP(ipstr)
-		country, e := dbCity.Country(ip)
+		country, e := dbCountry.Country(ip)
 		if e != nil {
-			log.Printf(e.Error())
+			log.Printf("dbCountry=" + e.Error())
 			http.Error(w, "failed parsing IPs", 400)
 			return
 		}
 
 		isp, e := dbASN.ASN(ip)
 		if e != nil {
-			log.Printf(e.Error())
+			log.Printf("dbASN=" + e.Error())
 			http.Error(w, "failed parsing IPs", 400)
 			return
 		}
@@ -130,7 +131,7 @@ func lookup(w http.ResponseWriter, r *http.Request) {
 	buf := new(bytes.Buffer)
 	if e := json.NewEncoder(buf).Encode(out); e != nil {
 		log.Printf(e.Error())
-		http.Error(w, "encoding failed", 400)
+		http.Error(w, "failed encoding", 400)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -157,11 +158,11 @@ func main() {
 	cache = ttl_map.New("/tmp/leak.tsv")
 
 	var err error
-	dbCity, err = geoip2.Open("city.mmdb")
+	dbCountry, err = geoip2.Open("country.mmdb")
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer dbCity.Close()
+	defer dbCountry.Close()
 
 	dbASN, err = geoip2.Open("asn.mmdb")
 	if err != nil {
