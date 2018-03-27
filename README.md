@@ -2,9 +2,34 @@
 
 DNSleak
 ==================
-Catch DNS-requests and keep in memory to offer
-the origin IP and notice if your DNS-requests pass through
-a faulty server.
+Small DNS-server that catches requests and offers origins through HTTP(s) API.
+
+What is used?
+- LetsEncrypt to offer easy HTTPS-requests
+- CORS-headers are added to cross-domain do AJAX-requests
+- ISP/Country lookup through Maxmind's GeoIP
+
+How to use?
+- Point A-record to this node i.e. ns-dnstest.spyoff.com
+- Point NS-record to this node i.e. dnstest.spyoff.com
+- POST https://ns-dnstest.spyoff.com/dns/leaktest
+ IN: ```{domain: ["4eb4b123bbd72478a29bff21cd00f48722b704ce.dnstest.spyoff.com"]}```
+ OUT: ```{"15169":{"ISP":"Google LLC","Country":"US","IP":"172.217.40.8"}```
+
+Arguments
+```
+./dnsleak --help
+Usage of ./dnsleak:
+  -d string
+    	DNS listen on (both tcp and udp) (default "[::]:53")
+  -h string
+    	HTTP listen on (default "[::]:80")
+  -m string
+    	HTTPS-domain (LetsEncrypt) (default "ns-dnstest.spyoff.com")
+  -s string
+    	HTTPS listen on (default "[::]:443")
+  -v	Verbose-mode (log more)
+```
 
 Tool created for [SpyOFF](https://www.spyoff.com/dns-leak-test/?a_aid=11108&a_bid=02dc3d81)
 
