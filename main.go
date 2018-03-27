@@ -2,19 +2,19 @@ package main
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/coreos/go-systemd/daemon"
 	ttl_map "github.com/leprosus/golang-ttl-map"
 	"github.com/miekg/dns"
 	geoip2 "github.com/oschwald/geoip2-golang"
+	"golang.org/x/crypto/acme/autocert"
 	"log"
 	"net"
 	"net/http"
 	"strings"
-	"golang.org/x/crypto/acme/autocert"
-	"crypto/tls"
-	"github.com/coreos/go-systemd/daemon"
 )
 
 var (
@@ -176,29 +176,28 @@ func main() {
 		}
 	}()
 
-	
-    m := &autocert.Manager{
-        Cache:      autocert.DirCache("certs"),
-        Prompt:     autocert.AcceptTOS,
-        HostPolicy: autocert.HostWhitelist("ns-dnstest.spyoff.com"),
-    }
-    go http.ListenAndServe(http_addr, m.HTTPHandler(nil))
+	m := &autocert.Manager{
+		Cache:      autocert.DirCache("certs"),
+		Prompt:     autocert.AcceptTOS,
+		HostPolicy: autocert.HostWhitelist("ns-dnstest.spyoff.com"),
+	}
+	go http.ListenAndServe(http_addr, m.HTTPHandler(nil))
 
-    mux := http.NewServeMux()
-    mux.HandleFunc("/dns/leaktest", lookup)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/dns/leaktest", lookup)
 
-    s := &http.Server{
-        Addr:      ":https",
-        TLSConfig: &tls.Config{GetCertificate: m.GetCertificate},
-        Handler:   mux,
-    }
+	s := &http.Server{
+		Addr:      ":https",
+		TLSConfig: &tls.Config{GetCertificate: m.GetCertificate},
+		Handler:   mux,
+	}
 
-    sent, e := daemon.SdNotify(false, "READY=1")
-    if e != nil {
-        log.Fatal(e)
-    }
-    if !sent {
-      log.Printf("SystemD notify NOT sent\n")
-    }
-    log.Fatal(s.ListenAndServeTLS("", ""))
+	sent, e := daemon.SdNotify(false, "READY=1")
+	if e != nil {
+		log.Fatal(e)
+	}
+	if !sent {
+		log.Printf("SystemD notify NOT sent\n")
+	}
+	log.Fatal(s.ListenAndServeTLS("", ""))
 }
